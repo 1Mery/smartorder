@@ -7,7 +7,7 @@ spring:
     config:
       server:
         git:
-          uri:
+          uri: https://github.com/1Mery/smartorder
           default-label: main
           search-paths:
           - configurations/
