@@ -1,0 +1,16 @@
+services:
+  productsv_db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: product_service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5433:5432"
+      #postgresin konteyner içindeki veri depoladığı alan
+    volumes:
+     - productdb_vol:/var/lib/postgresql/data
+
+
+volumes:
+  productdb_vol: {}
