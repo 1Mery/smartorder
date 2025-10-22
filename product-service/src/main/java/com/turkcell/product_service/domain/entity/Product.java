@@ -2,6 +2,8 @@ package com.turkcell.product_service.domain.entity;
 
 import com.turkcell.product_service.domain.valueobjects.Price;
 import com.turkcell.product_service.domain.valueobjects.Stock;
+import com.turkcell.product_service.domain.valueobjects.Currency;
+
 import java.util.Objects;
 import java.util.UUID;
 
@@ -15,36 +17,38 @@ public class Product {
     private String description;
     private Price price;
     private Stock stock;
+    private Currency currency;
 
     // Private constructor - factory method kullanılacak
-    private Product(ProductId id, String name, String description, Price price, Stock stock) {
+    private Product(ProductId id, String name, String description, Price price, Stock stock, Currency currency) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.price = price;
         this.stock = stock;
+        this.currency=currency;
     }
 
     /**
      * Yeni ürün oluşturur
      */
-    public static Product create(String name, String description, Price price, Stock stock) {
-        validateProductData(name, description, price, stock);
+    public static Product create(String name, String description, Price price, Stock stock, Currency currency) {
+        validateProductData(name, description, price, stock,currency);
 
         ProductId productId = ProductId.generate();
-        return new Product(productId, name, description, price, stock);
+        return new Product(productId, name, description, price, stock,currency);
     }
 
     /**
      * Mevcut ürünü yeniden oluşturur (repository'den yüklerken)
      */
-    public static Product reconstruct(ProductId id, String name, String description, Price price, Stock stock) {
-        validateProductData(name, description, price, stock);
+    public static Product reconstruct(ProductId id, String name, String description, Price price, Stock stock, Currency currency) {
+        validateProductData(name, description, price, stock,currency);
 
-        return new Product(id, name, description, price, stock);
+        return new Product(id, name, description, price, stock,currency);
     }
 
-    private static void validateProductData(String name, String description, Price price, Stock stock) {
+    private static void validateProductData(String name, String description, Price price, Stock stock, Currency currency) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Ürün adı null veya boş olamaz");
         }
@@ -78,6 +82,10 @@ public class Product {
 
     public Stock getStock() {
         return stock;
+    }
+
+    public Currency getCurrency(){
+        return currency;
     }
 
     // Business methods
@@ -210,16 +218,18 @@ public class Product {
             return new ProductId(UUID.randomUUID());
         }
 
-        public static ProductId fromString(String id) {
-            if (id == null || id.trim().isEmpty()) {
-                throw new IllegalArgumentException("Ürün ID'si null veya boş olamaz");
-            }
-            try {
-                return new ProductId(UUID.fromString(id));
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Geçersiz ürün ID formatı: " + id);
-            }
+     // Veritabanındaki UUID için
+    public static ProductId fromUUID(UUID id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Ürün ID'si null olamaz");
         }
+        return new ProductId(id);
+    }
+
+    //  String ID için (örneğin dış API’den)
+    public static ProductId fromString(String id) {
+        return new ProductId(UUID.fromString(id));
+    }
 
         public UUID getValue() {
             return value;
