@@ -1,10 +1,8 @@
 package com.turkcell.product_service.application.dto.response;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
-public record ProductResponse(
-    UUID id,
+public record CreateProductResponse(
     String name,
     String description,
     BigDecimal amount,
@@ -12,5 +10,5 @@ public record ProductResponse(
     String code,
     String symbol,
     String currencyName
-) 
-{ }
+) {
+}
