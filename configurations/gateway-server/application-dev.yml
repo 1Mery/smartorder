@@ -1,2 +1,7 @@
-datasource:
-  url: localhost:5432
+spring:
+  application:
+    name: gateway-server
+  profiles:
+    active: dev
+  config:
+    import: configserver:http://localhost:8787
