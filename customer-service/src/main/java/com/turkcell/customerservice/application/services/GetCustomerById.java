@@ -1,6 +1,7 @@
 package com.turkcell.customerservice.application.services;
 
 import com.turkcell.customerservice.application.dto.CustomerResponse;
+import com.turkcell.customerservice.application.exception.CustomerNotFoundException;
 import com.turkcell.customerservice.application.mapper.CustomerMapper;
 import com.turkcell.customerservice.domain.model.Customer;
 import com.turkcell.customerservice.domain.model.CustomerId;
@@ -23,7 +24,7 @@ public class GetCustomerById {
     public CustomerResponse getById(UUID customerId){
         CustomerId id=new CustomerId(customerId);
         Customer customer=repository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Customer not found"));
+                .orElseThrow(()-> new CustomerNotFoundException("Customer not found"));
 
         return mapper.toResponse(customer);
     }
