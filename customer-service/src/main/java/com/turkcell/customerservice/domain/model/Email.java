@@ -2,9 +2,9 @@ package com.turkcell.customerservice.domain.model;
 
 import java.util.Objects;
 
-public record Email(String email) {
+public record Email(String value) {
     public Email {
-        Objects.requireNonNull(email, "Email cannot be null");
+        Objects.requireNonNull(value, "Email cannot be null");
     }
 
     public static Email of(String rawEmail) {
