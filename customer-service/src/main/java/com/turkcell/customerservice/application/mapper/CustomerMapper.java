@@ -24,9 +24,9 @@ public class CustomerMapper {
     }
 
     public Customer toDomain(CreateCustomerRequest request){
-        Email email = new Email(request.email());
-        Phone phone = new Phone(request.phone());
-        Address address = new Address(request.city(), request.street());
+        Email email =  Email.of(request.email());
+        Phone phone =  Phone.of(request.phone());
+        Address address = Address.of(request.city(), request.street());
 
         Customer customer=Customer.create(
                 request.firstName(),
