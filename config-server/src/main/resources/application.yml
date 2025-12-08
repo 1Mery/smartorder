@@ -9,8 +9,8 @@ spring:
           uri: https://github.com/1Mery/smartorder
           default-label: main
           search-paths:
-          - configurations/
-          - configurations/{application}
+            - configurations/
+            - configurations/{application}
 
 server:
   port: 8787
