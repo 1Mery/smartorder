@@ -1,5 +1,7 @@
 package com.turkcell.productservice.domain.model;
 
+import com.turkcell.productservice.domain.exception.ProductException;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
@@ -13,12 +15,12 @@ public record Money(BigDecimal amount) {
     public static Money of(BigDecimal rawAmount) {
 
         if (rawAmount == null) {
-            throw new IllegalArgumentException("Amount cannot be null");
+            throw new ProductException("Amount cannot be null");
         }
 
         //Negatif değer kontrolü
         if (rawAmount.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Amount cannot be negative");
+            throw new ProductException("Amount cannot be negative");
         }
 
         //   HALF_UP -> finans uygulamalarında en çok kullanılan yuvarlama
