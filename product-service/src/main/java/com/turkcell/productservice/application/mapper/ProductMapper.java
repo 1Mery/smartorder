@@ -4,7 +4,9 @@ import com.turkcell.productservice.application.dto.*;
 import com.turkcell.productservice.domain.model.Money;
 import com.turkcell.productservice.domain.model.Product;
 import com.turkcell.productservice.domain.model.Stock;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ProductMapper {
 
     public Product toDomain(CreateProductRequest request){

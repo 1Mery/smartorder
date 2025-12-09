@@ -8,7 +8,9 @@ import com.turkcell.productservice.domain.model.Money;
 import com.turkcell.productservice.domain.model.Product;
 import com.turkcell.productservice.domain.model.ProductId;
 import com.turkcell.productservice.domain.ports.ProductRepository;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ChangePriceService {
 
     private final ProductRepository repository;

@@ -11,9 +11,9 @@ public class CustomerEntityMapper {
                 new CustomerId(entity.getCustomerId()),
                 entity.getFirstName(),
                 entity.getLastName(),
-                new Email(entity.getEmail()),
-                new Phone(entity.getPhone()),
-                new Address(entity.getAddress().getCity(),entity.getAddress().getStreet())
+                Email.of(entity.getEmail()),
+                Phone.of(entity.getPhone()),
+                Address.of(entity.getAddress().getCity(),entity.getAddress().getStreet())
         );
     }
 
