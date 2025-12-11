@@ -1,0 +1,13 @@
+server:
+  port: 8084
+
+spring:
+  datasource:
+    url: jdbc:postgresql://ordersv_db:5432/customer_service
+    username: postgres
+    password: admin
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka

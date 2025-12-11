@@ -22,7 +22,19 @@ services:
     volumes:
       - customerdb_vol:/var/lib/postgresql/data
 
+  ordersv_db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: order_service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5436:5432"
+    volumes:
+      - order_vol:/var/lib/postgresql/data
+
 
 volumes:
   productdb_vol: {}
   customerdb_vol: {}
+  orderdb_vol: {}

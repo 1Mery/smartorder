@@ -12,12 +12,10 @@ public class CustomerRepositoryAdapter implements CustomerRepository {
 
     private final CustomerEntityMapper mapper;
     private final SpringDataCustomerRepository repository;
-    private final CustomerEntityMapper customerEntityMapper;
 
-    public CustomerRepositoryAdapter(CustomerEntityMapper mapper, SpringDataCustomerRepository repository, CustomerEntityMapper customerEntityMapper) {
+    public CustomerRepositoryAdapter(CustomerEntityMapper mapper, SpringDataCustomerRepository repository) {
         this.mapper = mapper;
         this.repository = repository;
-        this.customerEntityMapper = customerEntityMapper;
     }
 
     @Override
@@ -32,7 +30,7 @@ public class CustomerRepositoryAdapter implements CustomerRepository {
     public Optional<Customer> findById(CustomerId customerId) {
         return repository
                 .findById(customerId.value())
-                .map(customerEntityMapper::toDomain);
+                .map(mapper::toDomain);
     }
 
     @Override
