@@ -31,7 +31,7 @@ services:
     ports:
       - "5436:5432"
     volumes:
-      - order_vol:/var/lib/postgresql/data
+      - orderdb_vol:/var/lib/postgresql/data
 
 
 volumes:
