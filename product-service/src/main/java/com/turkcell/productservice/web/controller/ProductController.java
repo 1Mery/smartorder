@@ -17,14 +17,16 @@ public class ProductController {
     private final ChangePriceService changePriceService;
     private final IncreaseStockService increaseStockService;
     private final DecreaseStockService decreaseStockService;
+    private final GetProductOrderInfoService getProductOrderInfoService;
 
-    public ProductController(CreateProductService createProductService, GetProductByIdService getProductByIdService, RenameProductService renameProductService, ChangePriceService changePriceService, IncreaseStockService increaseStockService, DecreaseStockService decreaseStockService) {
+    public ProductController(CreateProductService createProductService, GetProductByIdService getProductByIdService, RenameProductService renameProductService, ChangePriceService changePriceService, IncreaseStockService increaseStockService, DecreaseStockService decreaseStockService, GetProductOrderInfoService getProductOrderInfoService) {
         this.createProductService = createProductService;
         this.getProductByIdService = getProductByIdService;
         this.renameProductService = renameProductService;
         this.changePriceService = changePriceService;
         this.increaseStockService = increaseStockService;
         this.decreaseStockService = decreaseStockService;
+        this.getProductOrderInfoService = getProductOrderInfoService;
     }
 
     @PostMapping
@@ -59,6 +61,12 @@ public class ProductController {
     public ProductResponse decrease(@PathVariable UUID productId,
                                     @RequestBody DecreaseStockRequest request){
         return decreaseStockService.decrease(new ProductId(productId),request);
+    }
+
+    //Sadece order service için: minimal fiyat + stok bilgisi
+    @GetMapping("/{productId}/order-info")
+    public ProductOrderInfoResponse getOrderInfo(@PathVariable UUID productId) {
+        return getProductOrderInfoService.get(new ProductId(productId));
     }
 
 }

@@ -6,7 +6,7 @@ import java.util.UUID;
 public record ProductResponse(
         UUID productId,
         String productName,
-        BigDecimal amount,
+        BigDecimal price,
         int stock,
         boolean active
 ) {

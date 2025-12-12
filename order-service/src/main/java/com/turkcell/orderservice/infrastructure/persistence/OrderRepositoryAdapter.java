@@ -3,9 +3,11 @@ package com.turkcell.orderservice.infrastructure.persistence;
 import com.turkcell.orderservice.domain.model.Order;
 import com.turkcell.orderservice.domain.model.OrderId;
 import com.turkcell.orderservice.domain.ports.OrderRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+@Repository
 public class OrderRepositoryAdapter implements OrderRepository {
 
     private final JpaOrderMapper mapper;
