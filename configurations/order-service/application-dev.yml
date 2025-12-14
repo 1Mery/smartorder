@@ -20,7 +20,7 @@ spring:
     stream:
       defaultBinder: kafka
       bindings:
-        orderEvents-in-0: # Bean adı + "-in-0"
+        orderEvents-out-0:
           destination: order-events #  order-service ile aynı
           contentType: application/json
       kafka:
