@@ -35,6 +35,6 @@ public class ProductMapper {
     }
 
     public int mapStockAmount(DecreaseStockRequest request) {
-        return request.stockAmount();
+        return request.quantity();
     }
 }

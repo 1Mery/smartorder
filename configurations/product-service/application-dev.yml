@@ -16,6 +16,19 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+  cloud:
+    stream:
+      defaultBinder: kafka
+      bindings:
+        orderEvents-in-0:
+          destination: order-events      # Order-service'in gönderdiği topic
+          group: product-service         # Consumer group adı
+          contentType: application/json
+
+      kafka:
+        binder:
+          brokers: localhost:9092
+
 eureka:
   client:
     service-url:

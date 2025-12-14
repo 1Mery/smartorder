@@ -90,6 +90,19 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Spring Cloud Stream core -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-stream</artifactId>
+        </dependency>
+
+        <!-- Kafka binder -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-stream-binder-kafka</artifactId>
+        </dependency>
+
+
     </dependencies>
 
 

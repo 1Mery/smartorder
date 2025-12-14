@@ -24,7 +24,7 @@ public class DecreaseStockService {
         Product product=repository.findById(productId).
                 orElseThrow(()-> new ProductNotFoundException("Product not found"));
 
-        int stock=request.stockAmount();
+        int stock=mapper.mapStockAmount(request);
         product.decreaseStock(stock);
         repository.save(product);
 
