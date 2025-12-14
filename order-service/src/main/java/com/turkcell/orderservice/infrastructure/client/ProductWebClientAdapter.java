@@ -2,6 +2,7 @@ package com.turkcell.orderservice.infrastructure.client;
 
 import com.turkcell.orderservice.application.ports.ProductClient;
 import com.turkcell.orderservice.application.ports.ProductInfo;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 

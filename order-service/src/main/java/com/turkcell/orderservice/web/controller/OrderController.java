@@ -1,4 +1,4 @@
-package com.turkcell.orderservice.web;
+package com.turkcell.orderservice.web.controller;
 
 import com.turkcell.orderservice.application.command.ApproveOrderCommand;
 import com.turkcell.orderservice.application.command.CancelOrderCommand;
