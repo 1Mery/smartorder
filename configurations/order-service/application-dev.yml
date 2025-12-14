@@ -17,14 +17,11 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   cloud:
-    function:
-      definition: orderEvents       # @Bean ismi
     stream:
       defaultBinder: kafka
       bindings:
         orderEvents-in-0: # Bean adı + "-in-0"
           destination: order-events #  order-service ile aynı
-          group: product-service    # Consumer group ismi
           contentType: application/json
       kafka:
         binder:

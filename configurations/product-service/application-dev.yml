@@ -17,6 +17,8 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   cloud:
+    function:
+      definition: orderEvents          # @Bean ismi
     stream:
       defaultBinder: kafka
       bindings:
