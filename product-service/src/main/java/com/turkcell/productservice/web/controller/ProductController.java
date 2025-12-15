@@ -19,9 +19,8 @@ public class ProductController {
     private final IncreaseStockService increaseStockService;
     private final DecreaseStockService decreaseStockService;
     private final GetProductOrderInfoService getProductOrderInfoService;
-    private final CheckStockService checkStockService;
 
-    public ProductController(CreateProductService createProductService, GetProductByIdService getProductByIdService, RenameProductService renameProductService, ChangePriceService changePriceService, IncreaseStockService increaseStockService, DecreaseStockService decreaseStockService, GetProductOrderInfoService getProductOrderInfoService, CheckStockService checkStockService) {
+    public ProductController(CreateProductService createProductService, GetProductByIdService getProductByIdService, RenameProductService renameProductService, ChangePriceService changePriceService, IncreaseStockService increaseStockService, DecreaseStockService decreaseStockService, GetProductOrderInfoService getProductOrderInfoService) {
         this.createProductService = createProductService;
         this.getProductByIdService = getProductByIdService;
         this.renameProductService = renameProductService;
@@ -29,7 +28,6 @@ public class ProductController {
         this.increaseStockService = increaseStockService;
         this.decreaseStockService = decreaseStockService;
         this.getProductOrderInfoService = getProductOrderInfoService;
-        this.checkStockService = checkStockService;
     }
 
     @PostMapping
@@ -70,14 +68,6 @@ public class ProductController {
     @GetMapping("/{productId}/order-info")
     public ProductOrderInfoResponse getOrderInfo(@PathVariable UUID productId) {
         return getProductOrderInfoService.get(new ProductId(productId));
-    }
-
-    //create order için stok kontrolü
-    @GetMapping("/{id}/check-stock")
-    public ResponseEntity<Void> checkStock(@PathVariable UUID id,
-                                           @RequestParam int quantity) {
-        checkStockService.checkStock(new ProductId(id), quantity);
-        return ResponseEntity.ok().build();
     }
 
 }

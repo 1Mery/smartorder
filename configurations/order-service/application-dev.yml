@@ -17,16 +17,29 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   cloud:
+    function:
+      # Order-service'te yazdığımız consumer bean isimleri:
+      definition: stockDecreasedEvents;stockDecreaseFailedEvents
     stream:
       defaultBinder: kafka
       bindings:
         orderEvents-out-0:
-          destination: order-events #  order-service ile aynı
+          destination: order-events
           contentType: application/json
+
+        stockDecreasedEvents-in-0:
+          destination: stock-decreased-events
+          group: order-service
+          contentType: application/json
+
+        stockDecreaseFailedEvents-in-0:
+          destination: stock-decrease-failed-events
+          group: order-service
+          contentType: application/json
+
       kafka:
         binder:
           brokers: localhost:9092
-
 
 eureka:
   client:

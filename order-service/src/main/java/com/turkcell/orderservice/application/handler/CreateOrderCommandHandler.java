@@ -4,7 +4,7 @@ import com.turkcell.orderservice.application.ports.*;
 import com.turkcell.orderservice.application.command.CreateOrderCommand;
 import com.turkcell.orderservice.application.dto.OrderResponse;
 import com.turkcell.orderservice.application.mapper.OrderMapper;
-import com.turkcell.orderservice.domain.event.OrderCreatedEvent;
+import com.turkcell.orderservice.domain.event.OrderCreated;
 import com.turkcell.orderservice.domain.model.CustomerId;
 import com.turkcell.orderservice.domain.model.Order;
 import com.turkcell.orderservice.domain.model.ProductId;
@@ -21,23 +21,19 @@ public class CreateOrderCommandHandler {
     private final ProductClient productClient;
     private final OrderMapper mapper;
     private final DomainEventPublisher eventPublisher;
-    private final StockClient stockClient;
 
 
-    public CreateOrderCommandHandler(OrderRepository repository, CustomerClient customerClient, ProductClient productClient, OrderMapper mapper, DomainEventPublisher eventPublisher, StockClient stockClient) {
+    public CreateOrderCommandHandler(OrderRepository repository, CustomerClient customerClient, ProductClient productClient, OrderMapper mapper, DomainEventPublisher eventPublisher) {
         this.repository = repository;
         this.customerClient = customerClient;
         this.productClient = productClient;
         this.mapper = mapper;
         this.eventPublisher = eventPublisher;
-        this.stockClient = stockClient;
     }
 
     public OrderResponse create(CreateOrderCommand command){
 
         customerClient.verifyCustomer(command.customerId());
-
-        stockClient.checkStock(command.productId(), command.quantity());
 
         ProductInfo info = productClient.getProductInfo(command.productId());
 
@@ -51,7 +47,7 @@ public class CreateOrderCommandHandler {
 
         repository.save(order);
 
-        OrderCreatedEvent event= new OrderCreatedEvent(
+        OrderCreated event= new OrderCreated(
           order.getOrderId().value(),
           order.getCustomerId().value(),
           order.getProductId().value(),

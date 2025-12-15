@@ -1,4 +1,4 @@
-package com.turkcell.productservice.infrastructure.kafka;
+package com.turkcell.productservice.application.events;
 
 import java.math.BigDecimal;
 import java.util.UUID;
