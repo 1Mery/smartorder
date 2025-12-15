@@ -3,7 +3,7 @@ package com.turkcell.orderservice.domain.event;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public record OrderCreated(
+public record OrderCreatedEvent(
         UUID orderId,
         UUID customerId,
         UUID productId,

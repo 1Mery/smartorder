@@ -22,18 +22,9 @@ spring:
     stream:
       defaultBinder: kafka
       bindings:
-
         orderEvents-in-0:
           destination: order-events      # Order-service'in gönderdiği topic
           group: product-service         # Consumer group adı
-          contentType: application/json
-
-        stockDecreasedEvents-out-0:
-          destination: stock-decreased-events
-          contentType: application/json
-
-        stockDecreaseFailedEvents-out-0:
-          destination: stock-decrease-failed-events
           contentType: application/json
 
       kafka:

@@ -1,6 +1,5 @@
 package com.turkcell.productservice.domain.model;
 
-import com.turkcell.productservice.domain.exception.InsufficientStockException;
 import com.turkcell.productservice.domain.exception.ProductException;
 
 import java.util.Objects;
@@ -56,20 +55,6 @@ public class Product {
     }
 
     public void decreaseStock(int amount) {
-        if (amount <= 0) {
-            throw new ProductException("Decrease amount must be greater than zero");
-        }
-
-        int currentStock = this.value.value();
-
-        if (currentStock < amount) {
-            throw new InsufficientStockException(
-                    "Insufficient stock: requested=" + amount + ", available=" + currentStock,
-                    amount,
-                    currentStock
-            );
-        }
-
         this.value = this.value.decrease(amount);
     }
 
