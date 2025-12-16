@@ -40,6 +40,7 @@ public class StockWebClientAdapter implements StockClient {
                         "Insufficient stock for product " + productId
                 );
             }
+            throw e;
         }
     }
 }

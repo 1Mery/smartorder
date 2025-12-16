@@ -1,5 +1,6 @@
 package com.turkcell.productservice.web.exception;
 
+import com.turkcell.productservice.application.exception.InsufficientStockException;
 import com.turkcell.productservice.application.exception.ProductNotFoundException;
 import com.turkcell.productservice.domain.exception.ProductException;
 import org.springframework.http.HttpStatus;
@@ -45,5 +46,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleGeneral(Exception ex) {
         return new ErrorResponse("Internal server error");
+    }
+
+    //409 - Insufficient
+    @ExceptionHandler(InsufficientStockException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleInsufficient(InsufficientStockException ex){
+        return new ErrorResponse(ex.getMessage());
     }
 }

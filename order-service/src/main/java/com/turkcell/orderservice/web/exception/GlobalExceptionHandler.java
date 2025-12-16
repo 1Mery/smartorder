@@ -14,7 +14,7 @@ public class GlobalExceptionHandler {
             InsufficientStockException ex
     ) {
         return ResponseEntity
-                .status(HttpStatus.CONFLICT)
+                .status(HttpStatus.CONFLICT)  //409 hatası
                 .body(ex.getMessage());
     }
 
