@@ -1,6 +1,7 @@
 package com.turkcell.orderservice.web.controller;
 
 import com.turkcell.orderservice.application.command.*;
+import com.turkcell.orderservice.application.dto.CreateOrderRequest;
 import com.turkcell.orderservice.application.dto.OrderResponse;
 import com.turkcell.orderservice.application.handler.PaidOrderCommandHandler;
 import com.turkcell.orderservice.application.handler.CancelOrderCommandHandler;
@@ -9,6 +10,8 @@ import com.turkcell.orderservice.application.handler.CreateOrderCommandHandler;
 import com.turkcell.orderservice.application.query.GetOrderByIdHandler;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -30,8 +33,24 @@ public class OrderController {
     }
 
     @PostMapping
-    public OrderResponse create(@RequestBody CreateOrderCommand request) {
-        return createHandler.create(request);
+    public OrderResponse create(@RequestBody CreateOrderRequest request) {
+        List<CreateOrderCommand.CreateOrderItemCommand> itemCommands = new ArrayList<>();
+
+        if (request.items() != null) {
+            for (CreateOrderRequest.CreateOrderItemRequest itemRequest : request.items()) {
+                itemCommands.add(
+                        new CreateOrderCommand.CreateOrderItemCommand(
+                                itemRequest.productId(),
+                                itemRequest.quantity()
+                        )
+                );
+            }
+        }
+        CreateOrderCommand command = new CreateOrderCommand(
+                request.customerId(),
+                itemCommands
+        );
+        return createHandler.create(command);
     }
 
     @PostMapping("/{orderId}/cancel")

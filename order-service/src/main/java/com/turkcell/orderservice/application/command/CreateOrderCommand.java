@@ -1,10 +1,16 @@
 package com.turkcell.orderservice.application.command;
 
+import java.util.List;
 import java.util.UUID;
 
 public record CreateOrderCommand(
         UUID customerId,
-        UUID productId,
-        int quantity
+        List<CreateOrderItemCommand> items
 ) {
+    // Her bir ürün için
+    public record CreateOrderItemCommand(
+            UUID productId,
+            int quantity
+    ) {
+    }
 }

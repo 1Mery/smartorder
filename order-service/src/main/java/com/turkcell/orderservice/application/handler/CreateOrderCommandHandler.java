@@ -1,5 +1,6 @@
 package com.turkcell.orderservice.application.handler;
 
+import com.turkcell.orderservice.application.exception.OrderNotFoundException;
 import com.turkcell.orderservice.application.ports.*;
 import com.turkcell.orderservice.application.command.CreateOrderCommand;
 import com.turkcell.orderservice.application.dto.OrderResponse;
@@ -36,27 +37,49 @@ public class CreateOrderCommandHandler {
     public OrderResponse create(CreateOrderCommand command){
 
         customerClient.verifyCustomer(command.customerId());
-
-        stockClient.checkStock(command.productId(), command.quantity());
-
-        ProductInfo info = productClient.getProductInfo(command.productId());
-
-        int quantity = command.quantity();
-        BigDecimal unitPrice = info.price();
-
         CustomerId customerId = new CustomerId(command.customerId());
-        ProductId productId = new ProductId(command.productId());
 
-        Order order = Order.create(customerId, productId, quantity, unitPrice);
+        if (command.items() == null || command.items().isEmpty()) {
+            throw new OrderNotFoundException("Order must have at least one item");
+        }
+
+        //sipariş oluşturulup item eklenir
+        Order order = null;
+
+        for (CreateOrderCommand.CreateOrderItemCommand itemCommand : command.items()) {
+
+            ProductId productId = new ProductId(itemCommand.productId());
+            int quantity = itemCommand.quantity();
+
+            // Stok kontrolü
+            stockClient.checkStock(itemCommand.productId(), quantity);
+
+            // Ürün bilgisi
+            ProductInfo info = productClient.getProductInfo(itemCommand.productId());
+            BigDecimal unitPrice = info.price();
+
+            if (order == null) {
+                order = Order.create(
+                        customerId,
+                        productId,
+                        quantity,
+                        unitPrice
+                );
+            } else {
+                order.addItem(
+                        productId,
+                        quantity,
+                        unitPrice
+                );
+            }
+        }
 
         repository.save(order);
 
-        OrderCreatedEvent event= new OrderCreatedEvent(
-          order.getOrderId().value(),
-          order.getCustomerId().value(),
-          order.getProductId().value(),
-          order.getQuantity(),
-          order.getTotalPrice()
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                order.getOrderId().value(),
+                order.getCustomerId().value(),
+                order.getTotalPrice()
         );
 
         eventPublisher.publish(event);

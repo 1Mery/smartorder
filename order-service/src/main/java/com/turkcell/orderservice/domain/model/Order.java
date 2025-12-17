@@ -3,31 +3,26 @@ package com.turkcell.orderservice.domain.model;
 import com.turkcell.orderservice.domain.exception.OrderException;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Order {
     private final OrderId orderId;
 
     private final CustomerId customerId;
 
-    private final ProductId productId;
+    private final List<OrderItem> items = new ArrayList<>();
 
-    private int quantity;
-
-    private BigDecimal unitPrice;
-
-    private BigDecimal totalPrice;  //quantity * unitPrice
+    private BigDecimal totalPrice = BigDecimal.ZERO; //tüm itemların toplamı
 
     private OrderStatus status;
 
-    private Order(OrderId orderId, CustomerId customerId, ProductId productId, int quantity, BigDecimal unitPrice, BigDecimal totalPrice, OrderStatus status) {
+    private Order(OrderId orderId, CustomerId customerId, OrderStatus status) {
         this.orderId = orderId;
         this.customerId = customerId;
-        this.productId = productId;
-        this.quantity = quantity;
-        this.unitPrice = unitPrice;
-        this.totalPrice = totalPrice;
         this.status = status;
     }
+
 
     public static Order create(CustomerId customerId,
                                ProductId productId,
@@ -39,32 +34,54 @@ public class Order {
         validateQuantity(quantity);
         validateUnitPrice(unitPrice);
 
-        //totalPrice hesapla
-        BigDecimal totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
-
-        validateTotalPrice(totalPrice, unitPrice, quantity);
-
-        return new Order(
+        Order order = new Order(
                 OrderId.generate(),
                 customerId,
-                productId,
-                quantity,
-                unitPrice,
-                totalPrice,
                 OrderStatus.CREATED
         );
+
+        order.addItem(productId, quantity, unitPrice); //totalPrice += lineTotal
+
+        return order;
     }
 
     public static Order rehydrate(OrderId orderId,
                                   CustomerId customerId,
-                                  ProductId productId,
-                                  int quantity,
-                                  BigDecimal unitPrice,
-                                  BigDecimal totalPrice,
+                                  List<OrderItem> items,
                                   OrderStatus status) {
 
-        return new Order(orderId,customerId,productId,quantity,unitPrice,totalPrice,status);
+        validateCustomerId(customerId);
+
+        if (items == null || items.isEmpty()) {
+            throw new OrderException("Order must have at least one item");
+        }
+
+        //Siparişi oluştur boş sepet gibi
+        Order order = new Order(orderId, customerId, status);
+
+        // listesine ekle
+        order.items.addAll(items);
+
+        //lineTotal'ından hesapla
+        order.totalPrice = items.stream()
+                .map(OrderItem::getLineTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return order;
     }
+
+    //çoklu ürün siparişi için
+    public void addItem(ProductId productId, int quantity, BigDecimal unitPrice) {
+        if (this.status != OrderStatus.CREATED) {
+            throw new OrderException("Items can only be added when order is in CREATED status");
+        }
+
+        OrderItem item = OrderItem.create(productId, quantity, unitPrice);
+        this.items.add(item);
+        //Toplam fiyatı güncelle
+        this.totalPrice = this.totalPrice.add(item.getLineTotal());
+    }
+
 
     private static void validateCustomerId(CustomerId customerId) {
         if (customerId == null)
@@ -130,7 +147,6 @@ public class Order {
         this.status = OrderStatus.CANCELLED;
     }
 
-
     public OrderId getOrderId() {
         return orderId;
     }
@@ -139,16 +155,8 @@ public class Order {
         return customerId;
     }
 
-    public ProductId getProductId() {
-        return productId;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public BigDecimal getUnitPrice() {
-        return unitPrice;
+    public List<OrderItem> getItems() {
+        return items;
     }
 
     public BigDecimal getTotalPrice() {

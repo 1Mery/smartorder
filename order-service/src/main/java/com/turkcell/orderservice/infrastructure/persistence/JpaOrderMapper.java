@@ -3,30 +3,74 @@ package com.turkcell.orderservice.infrastructure.persistence;
 import com.turkcell.orderservice.domain.model.*;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Component
 public class JpaOrderMapper {
 
-    public Order toDomain(JpaOrderEntity entity){
+    public Order toDomain(JpaOrderEntity entity) {
+        OrderId orderId = new OrderId(entity.getOrderId());
+        CustomerId customerId = new CustomerId(entity.getCustomerId());
+        OrderStatus status = OrderStatus.valueOf(entity.getStatus());
+
+        // JPA item'ları domain OrderItem'a çevir
+        List<OrderItem> items = new ArrayList<>();
+
+        for (JpaOrderItemEntity itemEntity : entity.getItems()) {
+
+            // 1. Her JPA item'i, domain OrderItem'e çevir
+            OrderItem item = toDomainItem(itemEntity);
+
+            // 2. Domain listesine ekle
+            items.add(item);
+        }
+
+        // Domain Order'ı, item listesiyle birlikte ayağa kaldır
         return Order.rehydrate(
-                new OrderId(entity.getOrderId()),
-                new CustomerId(entity.getCustomerId()),
-                new ProductId(entity.getProductId()),
-                entity.getQuantity(),
-                entity.getUnitPrice(),
-                entity.getTotalPrice(),
-                OrderStatus.valueOf(entity.getStatus())
+                orderId,
+                customerId,
+                items,
+                status
         );
     }
 
-    public JpaOrderEntity toEntity(Order order){
-        JpaOrderEntity orderEntity=new JpaOrderEntity();
+    private OrderItem toDomainItem(JpaOrderItemEntity itemEntity) {
+        OrderItemId itemId = new OrderItemId(itemEntity.getOrderItemId());
+        ProductId productId = new ProductId(itemEntity.getProductId());
+
+        return OrderItem.rehydrate(
+                itemId,
+                productId,
+                itemEntity.getQuantity(),
+                itemEntity.getUnitPrice(),
+                itemEntity.getLineTotal()
+        );
+    }
+
+    public JpaOrderEntity toEntity(Order order) {
+        JpaOrderEntity orderEntity = new JpaOrderEntity();
         orderEntity.setOrderId(order.getOrderId().value());
         orderEntity.setCustomerId(order.getCustomerId().value());
-        orderEntity.setProductId(order.getProductId().value());
-        orderEntity.setQuantity(order.getQuantity());
-        orderEntity.setUnitPrice(order.getUnitPrice());
         orderEntity.setTotalPrice(order.getTotalPrice());
         orderEntity.setStatus(order.getStatus().toString());
+
+        List<JpaOrderItemEntity> itemEntities = new ArrayList<>();
+
+        for (OrderItem item : order.getItems()) {
+            JpaOrderItemEntity itemEntity = new JpaOrderItemEntity();
+            itemEntity.setOrderItemId(item.getOrderItemId().value());
+            itemEntity.setOrder(orderEntity);
+            itemEntity.setProductId(item.getProductId().value());
+            itemEntity.setQuantity(item.getQuantity());
+            itemEntity.setUnitPrice(item.getUnitPrice());
+            itemEntity.setLineTotal(item.getLineTotal());
+
+            itemEntities.add(itemEntity);
+        }
+
+        orderEntity.setItems(itemEntities);
 
         return orderEntity;
     }
