@@ -1,14 +1,12 @@
 package com.turkcell.orderservice.web.controller;
 
-import com.turkcell.orderservice.application.command.ApproveOrderCommand;
-import com.turkcell.orderservice.application.command.CancelOrderCommand;
-import com.turkcell.orderservice.application.command.CompleteOrderCommand;
-import com.turkcell.orderservice.application.command.CreateOrderCommand;
+import com.turkcell.orderservice.application.command.*;
 import com.turkcell.orderservice.application.dto.OrderResponse;
-import com.turkcell.orderservice.application.handler.ApproveOrderCommandHandler;
+import com.turkcell.orderservice.application.handler.PaidOrderCommandHandler;
 import com.turkcell.orderservice.application.handler.CancelOrderCommandHandler;
-import com.turkcell.orderservice.application.handler.CompleteOrderCommandHandler;
+import com.turkcell.orderservice.application.handler.DeliveredOrderCommandHandler;
 import com.turkcell.orderservice.application.handler.CreateOrderCommandHandler;
+import com.turkcell.orderservice.application.query.GetOrderByIdHandler;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -19,17 +17,16 @@ public class OrderController {
 
     private final CreateOrderCommandHandler createHandler;
     private final CancelOrderCommandHandler cancelHandler;
-    private final ApproveOrderCommandHandler approveHandler;
-    private final CompleteOrderCommandHandler completeHandler;
+    private final PaidOrderCommandHandler paidHandler;
+    private final DeliveredOrderCommandHandler deliverHandler;
+    private final GetOrderByIdHandler handler;
 
-    public OrderController(CreateOrderCommandHandler createHandler,
-                           CancelOrderCommandHandler cancelHandler,
-                           ApproveOrderCommandHandler approveHandler,
-                           CompleteOrderCommandHandler completeHandler) {
+    public OrderController(CreateOrderCommandHandler createHandler, CancelOrderCommandHandler cancelHandler, PaidOrderCommandHandler paidHandler, DeliveredOrderCommandHandler deliverHandler, GetOrderByIdHandler handler) {
         this.createHandler = createHandler;
         this.cancelHandler = cancelHandler;
-        this.approveHandler = approveHandler;
-        this.completeHandler = completeHandler;
+        this.paidHandler = paidHandler;
+        this.deliverHandler = deliverHandler;
+        this.handler = handler;
     }
 
     @PostMapping
@@ -42,13 +39,18 @@ public class OrderController {
         return cancelHandler.cancelOrder(new CancelOrderCommand(orderId));
     }
 
-    @PostMapping("/{orderId}/approve")
+    @PostMapping("/{orderId}/paid")
     public OrderResponse approve(@PathVariable UUID orderId) {
-        return approveHandler.approveOrder(new ApproveOrderCommand(orderId));
+        return paidHandler.paidOrder(new PaidOrderCommand(orderId));
     }
 
-    @PostMapping("/{orderId}/complete")
+    @PostMapping("/{orderId}/delivered")
     public OrderResponse complete(@PathVariable UUID orderId) {
-        return completeHandler.completeOrder(new CompleteOrderCommand(orderId));
+        return deliverHandler.deliveredOrder(new DeliveredOrderCommand(orderId));
+    }
+
+    @GetMapping("{orderId}")
+    public OrderResponse getOrder(@PathVariable UUID orderId){
+        return handler.getOrder(new GetOrderByIdCommand(orderId));
     }
 }

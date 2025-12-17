@@ -2,5 +2,7 @@ package com.turkcell.orderservice.application.command;
 
 import java.util.UUID;
 
-public record CompleteOrderCommand(UUID orderId) {
+public record GetOrderByIdCommand(
+        UUID orderId
+) {
 }

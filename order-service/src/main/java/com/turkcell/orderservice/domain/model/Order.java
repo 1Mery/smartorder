@@ -98,24 +98,24 @@ public class Order {
             throw new OrderException("Total price is invalid");
     }
 
-    public void approve() {
+    public void paid() {
         if (this.status != OrderStatus.CREATED) {
             throw new OrderException("Only CREATED orders can be approved");
         }
 
-        this.status = OrderStatus.APPROVED;
+        this.status = OrderStatus.PAID;
     }
 
-    public void complete() {
-        if (this.status != OrderStatus.APPROVED) {
+    public void delivered() {
+        if (this.status != OrderStatus.PAID) {
             throw new OrderException("Only APPROVED orders can be completed");
         }
 
-        this.status = OrderStatus.COMPLETED;
+        this.status = OrderStatus.DELIVERED;
     }
 
     public void cancel() {
-        if (this.status == OrderStatus.COMPLETED) {
+        if (this.status == OrderStatus.DELIVERED) {
             throw new OrderException("COMPLETED orders cannot be cancelled");
         }
 
