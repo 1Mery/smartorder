@@ -15,19 +15,15 @@ public class JpaOrderMapper {
         CustomerId customerId = new CustomerId(entity.getCustomerId());
         OrderStatus status = OrderStatus.valueOf(entity.getStatus());
 
-        // JPA item'ları domain OrderItem'a çevir
         List<OrderItem> items = new ArrayList<>();
 
         for (JpaOrderItemEntity itemEntity : entity.getItems()) {
 
-            // 1. Her JPA item'i, domain OrderItem'e çevir
             OrderItem item = toDomainItem(itemEntity);
 
-            // 2. Domain listesine ekle
             items.add(item);
         }
 
-        // Domain Order'ı, item listesiyle birlikte ayağa kaldır
         return Order.rehydrate(
                 orderId,
                 customerId,
