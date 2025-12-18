@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: notification-service
+
+  profiles:
+    active: dev  #çal???lan ortama göre de?i?ilecek
+
+  config:
+    import: "optional:configserver:http://localhost:8787"
