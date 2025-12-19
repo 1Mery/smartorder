@@ -20,8 +20,14 @@ spring:
     stream:
       defaultBinder: kafka
       bindings:
-        orderEvents-out-0:
-          destination: order-events #  order-service ile aynı
+        orderCreateEvents-out-0:
+          destination: order-created-events   # Kafka topic adı
+          orderPaidEvents-out-0:
+            destination: order-paid-events
+          orderDeliveredEvents-out-0:
+            destination: order-delivered-events
+          orderCancelEvents-out-0:
+            destination: order-cancelled-events
           contentType: application/json
       kafka:
         binder:
