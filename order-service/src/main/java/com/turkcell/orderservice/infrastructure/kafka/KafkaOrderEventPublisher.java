@@ -1,17 +1,17 @@
 package com.turkcell.orderservice.infrastructure.kafka;
 
-import com.turkcell.orderservice.application.ports.DomainEventPublisher;
+import com.turkcell.orderservice.application.ports.OrderEventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class KafkaDomainEventPublisher  implements DomainEventPublisher {
+public class KafkaOrderEventPublisher implements OrderEventPublisher {
 
     private final StreamBridge streamBridge;
 
-    public KafkaDomainEventPublisher(StreamBridge streamBridge) {
+    public KafkaOrderEventPublisher(StreamBridge streamBridge) {
         this.streamBridge = streamBridge;
     }
 

@@ -1,18 +1,22 @@
 package com.turkcell.orderservice.application.handler;
 
+import com.turkcell.orderservice.application.event.OrderCreatedEvent;
+import com.turkcell.orderservice.application.event.OrderItemEvent;
 import com.turkcell.orderservice.application.exception.OrderNotFoundException;
 import com.turkcell.orderservice.application.ports.*;
 import com.turkcell.orderservice.application.command.CreateOrderCommand;
 import com.turkcell.orderservice.application.dto.OrderResponse;
 import com.turkcell.orderservice.application.mapper.OrderMapper;
-import com.turkcell.orderservice.domain.event.OrderCreatedEvent;
 import com.turkcell.orderservice.domain.model.CustomerId;
 import com.turkcell.orderservice.domain.model.Order;
+import com.turkcell.orderservice.domain.model.OrderItem;
 import com.turkcell.orderservice.domain.model.ProductId;
 import com.turkcell.orderservice.domain.ports.OrderRepository;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class CreateOrderCommandHandler {
@@ -21,11 +25,11 @@ public class CreateOrderCommandHandler {
     private final CustomerClient customerClient;
     private final ProductClient productClient;
     private final OrderMapper mapper;
-    private final DomainEventPublisher eventPublisher;
+    private final OrderEventPublisher eventPublisher;
     private final StockClient stockClient;
 
 
-    public CreateOrderCommandHandler(OrderRepository repository, CustomerClient customerClient, ProductClient productClient, OrderMapper mapper, DomainEventPublisher eventPublisher, StockClient stockClient) {
+    public CreateOrderCommandHandler(OrderRepository repository, CustomerClient customerClient, ProductClient productClient, OrderMapper mapper, OrderEventPublisher eventPublisher, StockClient stockClient) {
         this.repository = repository;
         this.customerClient = customerClient;
         this.productClient = productClient;
@@ -76,13 +80,27 @@ public class CreateOrderCommandHandler {
 
         repository.save(order);
 
+        List<OrderItemEvent> itemEvents=new ArrayList<>();
+
+        for (OrderItem item : order.getItems()){
+            OrderItemEvent itemEvent= new OrderItemEvent(
+                    item.getProductId().value(),
+                    item.getQuantity(),
+                    item.getUnitPrice(),
+                    item.getLineTotal()
+            );
+            itemEvents.add(itemEvent);
+        }
+
         OrderCreatedEvent event = new OrderCreatedEvent(
                 order.getOrderId().value(),
                 order.getCustomerId().value(),
-                order.getTotalPrice()
-        );
+                order.getTotalPrice(),
+                order.getStatus(),
+                itemEvents
+                );
 
-        eventPublisher.publish(event);
+        eventPublisher.publishOrderCreated(event);
 
         return mapper.toResponse(order);
     }
