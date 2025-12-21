@@ -8,16 +8,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.Map;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(InsufficientStockException.class)
-    public ResponseEntity<String> handleInsufficientStock(
-            InsufficientStockException ex
-    ) {
+    public ResponseEntity<Map<String, String>> handleInsufficientStock(InsufficientStockException ex) {
         return ResponseEntity
-                .status(HttpStatus.CONFLICT)  //409 hatası
-                .body(ex.getMessage());
+                .status(HttpStatus.CONFLICT)   // 409
+                .body(Map.of("message", ex.getMessage()));
     }
 
     @ExceptionHandler(CustomerNotFoundException.class)

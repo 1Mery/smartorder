@@ -12,12 +12,15 @@ import com.turkcell.orderservice.domain.model.Order;
 import com.turkcell.orderservice.domain.model.OrderItem;
 import com.turkcell.orderservice.domain.model.ProductId;
 import com.turkcell.orderservice.domain.ports.OrderRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+@Slf4j
 @Service
 public class CreateOrderCommandHandler {
 
@@ -39,7 +42,7 @@ public class CreateOrderCommandHandler {
     }
 
     public OrderResponse create(CreateOrderCommand command){
-
+        //müşteri kontrolü
         customerClient.verifyCustomer(command.customerId());
         CustomerId customerId = new CustomerId(command.customerId());
 
@@ -47,61 +50,87 @@ public class CreateOrderCommandHandler {
             throw new OrderNotFoundException("Order must have at least one item");
         }
 
+        //her başarılı decrease stok işlemini not alıyorum (SAGA için)
+        record ReservedItem(
+                UUID productId,
+                int quantity
+        ){ }
+
+        List<ReservedItem> reservedItems=new ArrayList<>();
+
         //sipariş oluşturulup item eklenir
         Order order = null;
 
-        for (CreateOrderCommand.CreateOrderItemCommand itemCommand : command.items()) {
+        try {
+            for (CreateOrderCommand.CreateOrderItemCommand itemCommand : command.items()) {
 
-            ProductId productId = new ProductId(itemCommand.productId());
-            int quantity = itemCommand.quantity();
+                ProductId productId = new ProductId(itemCommand.productId());
+                int quantity = itemCommand.quantity();
 
-            // Stok kontrolü
-            stockClient.checkStock(itemCommand.productId(), quantity);
+                //stok düşürdüğüm ürünü kayıt altına alıyorum
+                stockClient.decreaseStock(itemCommand.productId(),quantity);
+                reservedItems.add(new ReservedItem(itemCommand.productId(),quantity));
 
-            // Ürün bilgisi
-            ProductInfo info = productClient.getProductInfo(itemCommand.productId());
-            BigDecimal unitPrice = info.price();
+                //sipariş oluşturma aşamasıyla devam ediyor
 
-            if (order == null) {
-                order = Order.create(
-                        customerId,
-                        productId,
-                        quantity,
-                        unitPrice
-                );
-            } else {
-                order.addItem(
-                        productId,
-                        quantity,
-                        unitPrice
-                );
+                // Ürün bilgisi
+                ProductInfo info = productClient.getProductInfo(itemCommand.productId());
+                BigDecimal unitPrice = info.price();
+
+                if (order == null) {
+                    order = Order.create(
+                            customerId,
+                            productId,
+                            quantity,
+                            unitPrice
+                    );
+                } else {
+                    order.addItem(
+                            productId,
+                            quantity,
+                            unitPrice
+                    );
+                }
             }
-        }
 
-        repository.save(order);
+            repository.save(order);
 
-        List<OrderItemEvent> itemEvents=new ArrayList<>();
+            List<OrderItemEvent> itemEvents = new ArrayList<>();
 
-        for (OrderItem item : order.getItems()){
-            OrderItemEvent itemEvent= new OrderItemEvent(
-                    item.getProductId().value(),
-                    item.getQuantity(),
-                    item.getUnitPrice(),
-                    item.getLineTotal()
-            );
-            itemEvents.add(itemEvent);
-        }
-
-        OrderCreatedEvent event = new OrderCreatedEvent(
-                order.getOrderId().value(),
-                order.getCustomerId().value(),
-                order.getTotalPrice(),
-                order.getStatus(),
-                itemEvents
+            for (OrderItem item : order.getItems()) {
+                OrderItemEvent itemEvent = new OrderItemEvent(
+                        item.getProductId().value(),
+                        item.getQuantity(),
+                        item.getUnitPrice(),
+                        item.getLineTotal()
                 );
+                itemEvents.add(itemEvent);
+            }
 
-        eventPublisher.publishOrderCreated(event);
+            OrderCreatedEvent event = new OrderCreatedEvent(
+                    order.getOrderId().value(),
+                    order.getCustomerId().value(),
+                    order.getTotalPrice(),
+                    order.getStatus(),
+                    itemEvents
+            );
 
-        return mapper.toResponse(order);
+            eventPublisher.publishOrderCreated(event);
+
+            return mapper.toResponse(order);
+        }
+        catch (Exception exception){
+            //siparişteki ürünlerden birinin stok yetersiz olma durumundan dolayı
+            //create olmadan stok düşen işlmeleri geri arttırıyoruz
+            for (ReservedItem reservedItem:reservedItems){
+                try{
+                    stockClient.increaseStock(reservedItem.productId(), reservedItem.quantity());
+                }
+                catch (Exception rollBack){
+                    log.error("An error occurred during rollback.productId={}, quantity={}",reservedItem.productId(),reservedItem.quantity(),rollBack);
+                }
+            }
+            throw exception;
+        }
     }
 }
