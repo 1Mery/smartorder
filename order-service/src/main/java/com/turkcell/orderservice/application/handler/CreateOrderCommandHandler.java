@@ -2,6 +2,7 @@ package com.turkcell.orderservice.application.handler;
 
 import com.turkcell.orderservice.application.event.OrderCreatedEvent;
 import com.turkcell.orderservice.application.event.OrderItemEvent;
+import com.turkcell.orderservice.application.exception.InsufficientStockException;
 import com.turkcell.orderservice.application.exception.OrderNotFoundException;
 import com.turkcell.orderservice.application.ports.*;
 import com.turkcell.orderservice.application.command.CreateOrderCommand;
@@ -55,42 +56,45 @@ public class CreateOrderCommandHandler {
                 UUID productId,
                 int quantity
         ){ }
-
         List<ReservedItem> reservedItems=new ArrayList<>();
 
         //sipariş oluşturulup item eklenir
         Order order = null;
 
+        //tüm ürünleri kontrol ediyoruz
+        List<String> insufficient = new ArrayList<>();
+
         try {
-            for (CreateOrderCommand.CreateOrderItemCommand itemCommand : command.items()) {
 
-                ProductId productId = new ProductId(itemCommand.productId());
-                int quantity = itemCommand.quantity();
-
-                //stok düşürdüğüm ürünü kayıt altına alıyorum
-                stockClient.decreaseStock(itemCommand.productId(),quantity);
-                reservedItems.add(new ReservedItem(itemCommand.productId(),quantity));
-
-                //sipariş oluşturma aşamasıyla devam ediyor
-
-                // Ürün bilgisi
-                ProductInfo info = productClient.getProductInfo(itemCommand.productId());
+            for (CreateOrderCommand.CreateOrderItemCommand item : command.items()) {
+                ProductInfo info = productClient.getProductInfo(item.productId());
                 BigDecimal unitPrice = info.price();
 
+                ProductId productId = new ProductId(item.productId());
+                int quantity = item.quantity();
+
                 if (order == null) {
-                    order = Order.create(
-                            customerId,
-                            productId,
-                            quantity,
-                            unitPrice
-                    );
+                    order = Order.create(customerId, productId, quantity, unitPrice);
                 } else {
-                    order.addItem(
-                            productId,
-                            quantity,
-                            unitPrice
-                    );
+                    order.addItem(productId, quantity, unitPrice);
                 }
+            }
+
+            //Stok düşürmeyi dene yetersiz olanları topla
+            for (CreateOrderCommand.CreateOrderItemCommand item : command.items()) {
+                try {
+                    stockClient.decreaseStock(item.productId(), item.quantity());
+                    reservedItems.add(new ReservedItem(item.productId(), item.quantity()));
+                } catch (InsufficientStockException ex) {
+                    insufficient.add("productId=" + item.productId() + ", requested=" + item.quantity());
+                }
+            }
+
+            // eğer en az 1 ürün yetersizse
+            if (!insufficient.isEmpty()) {
+                throw new InsufficientStockException(
+                        "Insufficient stock for: " + String.join(" | ", insufficient)
+                );
             }
 
             repository.save(order);
@@ -119,6 +123,7 @@ public class CreateOrderCommandHandler {
 
             return mapper.toResponse(order);
         }
+
         catch (Exception exception){
             //siparişteki ürünlerden birinin stok yetersiz olma durumundan dolayı
             //create olmadan stok düşen işlmeleri geri arttırıyoruz
@@ -130,6 +135,11 @@ public class CreateOrderCommandHandler {
                     log.error("An error occurred during rollback.productId={}, quantity={}",reservedItem.productId(),reservedItem.quantity(),rollBack);
                 }
             }
+            if (order != null) {
+                order.cancel();   //oluşamayan siparişi iptal ediyoruz
+                repository.save(order);
+            }
+
             throw exception;
         }
     }
