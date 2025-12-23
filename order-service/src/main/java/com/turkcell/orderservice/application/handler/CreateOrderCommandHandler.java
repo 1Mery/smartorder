@@ -13,10 +13,16 @@ import com.turkcell.orderservice.domain.model.Order;
 import com.turkcell.orderservice.domain.model.OrderItem;
 import com.turkcell.orderservice.domain.model.ProductId;
 import com.turkcell.orderservice.domain.ports.OrderRepository;
+import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxEventEntity;
+import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxEventRepository;
+import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxPayloadSerializer;
+import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxStatus;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,19 +35,21 @@ public class CreateOrderCommandHandler {
     private final CustomerClient customerClient;
     private final ProductClient productClient;
     private final OrderMapper mapper;
-    private final OrderEventPublisher eventPublisher;
+    private final OutboxEventRepository outboxEventRepository;
     private final StockClient stockClient;
+    private final OutboxPayloadSerializer serializer;
 
-
-    public CreateOrderCommandHandler(OrderRepository repository, CustomerClient customerClient, ProductClient productClient, OrderMapper mapper, OrderEventPublisher eventPublisher, StockClient stockClient) {
+    public CreateOrderCommandHandler(OrderRepository repository, CustomerClient customerClient, ProductClient productClient, OrderMapper mapper, OutboxEventRepository outboxEventRepository, StockClient stockClient, OutboxPayloadSerializer serializer) {
         this.repository = repository;
         this.customerClient = customerClient;
         this.productClient = productClient;
         this.mapper = mapper;
-        this.eventPublisher = eventPublisher;
+        this.outboxEventRepository = outboxEventRepository;
         this.stockClient = stockClient;
+        this.serializer = serializer;
     }
 
+    @Transactional
     public OrderResponse create(CreateOrderCommand command){
         //müşteri kontrolü
         customerClient.verifyCustomer(command.customerId());
@@ -119,7 +127,18 @@ public class CreateOrderCommandHandler {
                     itemEvents
             );
 
-            eventPublisher.publishOrderCreated(event);
+            String payload =serializer.toJson (event);//event'i json stringe çeviriyorum objectmapperla
+
+            OutboxEventEntity eventEntity=new OutboxEventEntity();
+            eventEntity.setEventId(UUID.randomUUID());
+            eventEntity.setOrderId(order.getOrderId().value());
+            eventEntity.setEventType("OrderCreatedEvent");
+            eventEntity.setPayload(payload);
+            eventEntity.setStatus(OutboxStatus.PENDING);
+            eventEntity.setCreatedAt(Instant.now());
+            eventEntity.setBindingName("orderCreateEvents-out-0");
+
+            outboxEventRepository.save(eventEntity);
 
             return mapper.toResponse(order);
         }

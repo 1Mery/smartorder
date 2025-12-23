@@ -6,27 +6,34 @@ import com.turkcell.orderservice.application.event.OrderItemEvent;
 import com.turkcell.orderservice.application.event.OrderPaidEvent;
 import com.turkcell.orderservice.application.exception.OrderNotFoundException;
 import com.turkcell.orderservice.application.mapper.OrderMapper;
-import com.turkcell.orderservice.application.ports.OrderEventPublisher;
 import com.turkcell.orderservice.domain.model.Order;
 import com.turkcell.orderservice.domain.model.OrderId;
 import com.turkcell.orderservice.domain.model.OrderItem;
 import com.turkcell.orderservice.domain.ports.OrderRepository;
+import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxEventEntity;
+import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxEventRepository;
+import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxPayloadSerializer;
+import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class PaidOrderCommandHandler {
 
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    private final OrderEventPublisher publisher;
+    private final OutboxEventRepository eventRepository;
+    private final OutboxPayloadSerializer serializer;
 
-    public PaidOrderCommandHandler(OrderRepository orderRepository, OrderMapper orderMapper, OrderEventPublisher publisher) {
+    public PaidOrderCommandHandler(OrderRepository orderRepository, OrderMapper orderMapper, OutboxEventRepository eventRepository, OutboxPayloadSerializer serializer) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
-        this.publisher = publisher;
+        this.eventRepository = eventRepository;
+        this.serializer = serializer;
     }
 
     public OrderResponse paidOrder(PaidOrderCommand command){
@@ -58,7 +65,17 @@ public class PaidOrderCommandHandler {
                 itemEvents
         );
 
-        publisher.publishOrderPaid(event);
+        String payload =serializer.toJson (event);
+
+        OutboxEventEntity eventEntity=new OutboxEventEntity();
+        eventEntity.setEventId(UUID.randomUUID());
+        eventEntity.setOrderId(order.getOrderId().value());
+        eventEntity.setEventType("OrderPaidEvent");
+        eventEntity.setPayload(payload);
+        eventEntity.setStatus(OutboxStatus.PENDING);
+        eventEntity.setCreatedAt(Instant.now());
+
+        eventRepository.save(eventEntity);
 
         return orderMapper.toResponse(order);
     }

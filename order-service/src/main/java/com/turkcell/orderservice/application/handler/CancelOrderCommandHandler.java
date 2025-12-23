@@ -2,31 +2,38 @@ package com.turkcell.orderservice.application.handler;
 
 import com.turkcell.orderservice.application.command.CancelOrderCommand;
 import com.turkcell.orderservice.application.dto.OrderResponse;
-import com.turkcell.orderservice.application.event.OrderCancelledEvent;
+import com.turkcell.orderservice.application.event.OrderCreatedEvent;
 import com.turkcell.orderservice.application.event.OrderItemEvent;
 import com.turkcell.orderservice.application.exception.OrderNotFoundException;
 import com.turkcell.orderservice.application.mapper.OrderMapper;
-import com.turkcell.orderservice.application.ports.OrderEventPublisher;
 import com.turkcell.orderservice.domain.model.Order;
 import com.turkcell.orderservice.domain.model.OrderId;
 import com.turkcell.orderservice.domain.model.OrderItem;
 import com.turkcell.orderservice.domain.ports.OrderRepository;
+import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxEventEntity;
+import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxEventRepository;
+import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxPayloadSerializer;
+import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class CancelOrderCommandHandler {
 
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    private final OrderEventPublisher publisher;
+    private final OutboxEventRepository eventRepository;
+    private final OutboxPayloadSerializer serializer;
 
-    public CancelOrderCommandHandler(OrderRepository orderRepository, OrderMapper orderMapper, OrderEventPublisher publisher) {
+    public CancelOrderCommandHandler(OrderRepository orderRepository, OrderMapper orderMapper, OutboxEventRepository eventRepository, OutboxPayloadSerializer serializer) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
-        this.publisher = publisher;
+        this.eventRepository = eventRepository;
+        this.serializer = serializer;
     }
 
     public OrderResponse cancelOrder(CancelOrderCommand command) {
@@ -38,10 +45,10 @@ public class CancelOrderCommandHandler {
 
         orderRepository.save(order);
 
-        List<OrderItemEvent> itemEvents= new ArrayList<>();
+        List<OrderItemEvent> itemEvents = new ArrayList<>();
 
-        for (OrderItem item: order.getItems()){
-            OrderItemEvent itemEvent=new OrderItemEvent(
+        for (OrderItem item : order.getItems()) {
+            OrderItemEvent itemEvent = new OrderItemEvent(
                     item.getProductId().value(),
                     item.getQuantity(),
                     item.getUnitPrice(),
@@ -50,15 +57,25 @@ public class CancelOrderCommandHandler {
             itemEvents.add(itemEvent);
         }
 
-        OrderCancelledEvent event=new OrderCancelledEvent(
-          order.getOrderId().value(),
-          order.getCustomerId().value(),
-          order.getTotalPrice(),
-          order.getStatus(),
-          itemEvents
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                order.getOrderId().value(),
+                order.getCustomerId().value(),
+                order.getTotalPrice(),
+                order.getStatus(),
+                itemEvents
         );
 
-        publisher.publishOrderCancelled(event);
+        String payload =serializer.toJson (event);
+
+        OutboxEventEntity eventEntity=new OutboxEventEntity();
+        eventEntity.setEventId(UUID.randomUUID());
+        eventEntity.setOrderId(order.getOrderId().value());
+        eventEntity.setEventType("OrderCancelEvent");
+        eventEntity.setPayload(payload);
+        eventEntity.setStatus(OutboxStatus.PENDING);
+        eventEntity.setCreatedAt(Instant.now());
+
+        eventRepository.save(eventEntity);
 
         return orderMapper.toResponse(order);
     }
