@@ -127,8 +127,7 @@ public class CreateOrderCommandHandler {
                     itemEvents
             );
 
-            String payload =serializer.toJson (event);//event'i json stringe çeviriyorum objectmapperla
-
+            String payload =serializer.toJson (event);
             OutboxEventEntity eventEntity=new OutboxEventEntity();
             eventEntity.setEventId(UUID.randomUUID());
             eventEntity.setOrderId(order.getOrderId().value());
