@@ -7,6 +7,7 @@ import com.turkcell.productservice.application.mapper.ProductMapper;
 import com.turkcell.productservice.domain.model.Product;
 import com.turkcell.productservice.domain.model.ProductId;
 import com.turkcell.productservice.domain.ports.ProductRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,6 +21,7 @@ public class DecreaseStockService {
         this.repository = repository;
     }
 
+    @Transactional
     public ProductResponse decrease(ProductId productId, DecreaseStockRequest request){
         Product product=repository.findById(productId).
                 orElseThrow(()-> new ProductNotFoundException("Product not found"));

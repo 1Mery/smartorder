@@ -1,9 +1,6 @@
 package com.turkcell.productservice.infrastructure.persistence;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -26,6 +23,9 @@ public class JpaProductEntity {
     private BigDecimal amount;
 
     private int stock;
+
+    @Version  //optimisticlock kullanarak 2 istek aynı geldiğinde racecondition olmasın
+    private Long version;
 
     private boolean active;
 }
