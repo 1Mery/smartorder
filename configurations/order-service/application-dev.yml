@@ -19,6 +19,8 @@ spring:
   cloud:
     stream:
       defaultBinder: kafka
+      default:
+        contentType: application/json
       bindings:
         orderCreateEvents-out-0:
           destination: order-created-events   # Kafka topic adı
@@ -28,7 +30,6 @@ spring:
           destination: order-delivered-events
         orderCancelEvents-out-0:
           destination: order-cancelled-events
-        contentType: application/json
       kafka:
         binder:
           brokers: localhost:9092
