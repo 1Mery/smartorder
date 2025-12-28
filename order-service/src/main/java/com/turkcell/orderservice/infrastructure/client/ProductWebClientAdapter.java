@@ -3,6 +3,7 @@ package com.turkcell.orderservice.infrastructure.client;
 import com.turkcell.orderservice.application.exception.ProductNotFoundException;
 import com.turkcell.orderservice.application.ports.ProductClient;
 import com.turkcell.orderservice.application.ports.ProductInfo;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,8 @@ public class ProductWebClientAdapter implements ProductClient {
 
     private final WebClient productWebClient;
 
-    public ProductWebClientAdapter(WebClient productWebClient) {
+    public ProductWebClientAdapter(
+            @Qualifier("productWebClient") WebClient productWebClient) {
         this.productWebClient = productWebClient;
     }
 
@@ -26,7 +28,7 @@ public class ProductWebClientAdapter implements ProductClient {
         try {
             ProductInfoResponse response =
                     productWebClient.get()
-                            .uri("/api/v1/products/{id}", productId)
+                            .uri("/api/v1/products/{productId}/order-info", productId)
                             .retrieve()  //istek atılıyor ve response alınmaya hazır hale geliyor
                             .bodyToMono(ProductInfoResponse.class)  //gelen JSON productinforesponse çevirir
                             .block(); // sync çalışarak sonucun gelmesini bekliyoruz

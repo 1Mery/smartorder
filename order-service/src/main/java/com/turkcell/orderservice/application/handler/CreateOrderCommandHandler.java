@@ -2,8 +2,8 @@ package com.turkcell.orderservice.application.handler;
 
 import com.turkcell.orderservice.application.event.OrderCreatedEvent;
 import com.turkcell.orderservice.application.event.OrderItemEvent;
+import com.turkcell.orderservice.application.exception.BadRequestException;
 import com.turkcell.orderservice.application.exception.InsufficientStockException;
-import com.turkcell.orderservice.application.exception.OrderNotFoundException;
 import com.turkcell.orderservice.application.ports.*;
 import com.turkcell.orderservice.application.command.CreateOrderCommand;
 import com.turkcell.orderservice.application.dto.OrderResponse;
@@ -13,10 +13,7 @@ import com.turkcell.orderservice.domain.model.Order;
 import com.turkcell.orderservice.domain.model.OrderItem;
 import com.turkcell.orderservice.domain.model.ProductId;
 import com.turkcell.orderservice.domain.ports.OrderRepository;
-import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxEventEntity;
-import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxEventRepository;
-import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxPayloadSerializer;
-import com.turkcell.orderservice.infrastructure.kafka.outbox.OutboxStatus;
+import com.turkcell.orderservice.infrastructure.kafka.outbox.*;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,8 +35,9 @@ public class CreateOrderCommandHandler {
     private final OutboxEventRepository outboxEventRepository;
     private final StockClient stockClient;
     private final OutboxPayloadSerializer serializer;
+    private final StockRollbackOutboxService rollbackOutboxService;
 
-    public CreateOrderCommandHandler(OrderRepository repository, CustomerClient customerClient, ProductClient productClient, OrderMapper mapper, OutboxEventRepository outboxEventRepository, StockClient stockClient, OutboxPayloadSerializer serializer) {
+    public CreateOrderCommandHandler(OrderRepository repository, CustomerClient customerClient, ProductClient productClient, OrderMapper mapper, OutboxEventRepository outboxEventRepository, StockClient stockClient, OutboxPayloadSerializer serializer, StockRollbackOutboxService rollbackOutboxService) {
         this.repository = repository;
         this.customerClient = customerClient;
         this.productClient = productClient;
@@ -47,6 +45,7 @@ public class CreateOrderCommandHandler {
         this.outboxEventRepository = outboxEventRepository;
         this.stockClient = stockClient;
         this.serializer = serializer;
+        this.rollbackOutboxService = rollbackOutboxService;
     }
 
     @Transactional
@@ -56,7 +55,7 @@ public class CreateOrderCommandHandler {
         CustomerId customerId = new CustomerId(command.customerId());
 
         if (command.items() == null || command.items().isEmpty()) {
-            throw new OrderNotFoundException("Order must have at least one item");
+            throw new BadRequestException("Order must have at least one item");
         }
 
         //her başarılı decrease stok işlemini not alıyorum (SAGA için)
@@ -150,7 +149,13 @@ public class CreateOrderCommandHandler {
                     stockClient.increaseStock(reservedItem.productId(), reservedItem.quantity());
                 }
                 catch (Exception rollBack){
-                    log.error("An error occurred during rollback.productId={}, quantity={}",reservedItem.productId(),reservedItem.quantity(),rollBack);
+                    rollbackOutboxService.enqueueStockReleaseEvent(
+                            order.getOrderId().value(),
+                            reservedItem.productId(),
+                            reservedItem.quantity()
+                    );
+                    log.error("Sync rollback failed, saved to outbox. productId={}, quantity={}",
+                            reservedItem.productId(), reservedItem.quantity(), rollBack);
                 }
             }
             if (order != null) {

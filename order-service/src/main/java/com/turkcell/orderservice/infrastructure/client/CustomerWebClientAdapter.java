@@ -2,6 +2,7 @@ package com.turkcell.orderservice.infrastructure.client;
 
 import com.turkcell.orderservice.application.exception.CustomerNotFoundException;
 import com.turkcell.orderservice.application.ports.CustomerClient;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -14,7 +15,7 @@ public class CustomerWebClientAdapter implements CustomerClient {
 
     private final WebClient customerWebClient;
 
-    public CustomerWebClientAdapter(WebClient customerWebClient) {
+    public CustomerWebClientAdapter(@Qualifier("customerWebClient") WebClient customerWebClient) {
         this.customerWebClient = customerWebClient;
     }
 

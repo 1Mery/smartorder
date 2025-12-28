@@ -2,7 +2,7 @@ package com.turkcell.orderservice.application.handler;
 
 import com.turkcell.orderservice.application.command.CancelOrderCommand;
 import com.turkcell.orderservice.application.dto.OrderResponse;
-import com.turkcell.orderservice.application.event.OrderCreatedEvent;
+import com.turkcell.orderservice.application.event.OrderCancelledEvent;
 import com.turkcell.orderservice.application.event.OrderItemEvent;
 import com.turkcell.orderservice.application.exception.OrderNotFoundException;
 import com.turkcell.orderservice.application.mapper.OrderMapper;
@@ -57,7 +57,7 @@ public class CancelOrderCommandHandler {
             itemEvents.add(itemEvent);
         }
 
-        OrderCreatedEvent event = new OrderCreatedEvent(
+        OrderCancelledEvent event = new OrderCancelledEvent(
                 order.getOrderId().value(),
                 order.getCustomerId().value(),
                 order.getTotalPrice(),

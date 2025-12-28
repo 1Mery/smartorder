@@ -18,14 +18,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ProductNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFound(ProductNotFoundException ex) {
-        return new ErrorResponse(ex.getMessage());
+        return new ErrorResponse(ex.getMessage(), "PRODUCT_NOT_FOUND");
     }
 
     // 422 - Domain Rule
     @ExceptionHandler(ProductException.class)
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     public ErrorResponse handleDomain(ProductException ex) {
-        return new ErrorResponse(ex.getMessage());
+        return new ErrorResponse(ex.getMessage(),"DOMAIN_ERROR");
     }
 
     // 400 - Validation Error
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .orElse("Validation error");
 
-        return new ErrorResponse(message);
+        return new ErrorResponse(message,"VALIDATION_ERROR");
     }
 
     // 500 - General Errors
@@ -48,13 +48,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleGeneral(Exception ex) {
         log.error("Unhandled", ex);
-        return new ErrorResponse("Internal server error");
+        return new ErrorResponse("Internal server error", "INTERNAL_ERROR");
     }
 
     //409 - Insufficient
     @ExceptionHandler(InsufficientStockException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleInsufficient(InsufficientStockException ex){
-        return new ErrorResponse(ex.getMessage());
+        return new ErrorResponse(ex.getMessage(),"INSUFFICIENT_STOCK");
     }
 }

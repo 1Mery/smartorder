@@ -3,6 +3,7 @@ package com.turkcell.productservice.web.controller;
 import com.turkcell.productservice.application.dto.*;
 import com.turkcell.productservice.application.services.*;
 import com.turkcell.productservice.domain.model.ProductId;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,7 +34,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public ProductResponse create(@RequestBody CreateProductRequest request){
+    public ProductResponse create(@Valid @RequestBody CreateProductRequest request){
         return createProductService.create(request);
     }
 
@@ -50,19 +51,19 @@ public class ProductController {
 
     @PutMapping("/{productId}/price")
     public ProductResponse changePrice(@PathVariable UUID productId,
-                                       @RequestBody ChangePriceRequest request){
+                                      @Valid @RequestBody ChangePriceRequest request){
         return changePriceService.changePrice(new ProductId(productId),request);
     }
 
     @PutMapping("/{productId}/stock/increase")
     public ProductResponse increase(@PathVariable UUID productId,
-                                    @RequestBody IncreaseStockRequest request){
+                                    @Valid @RequestBody IncreaseStockRequest request){
         return increaseStockService.increase(new ProductId(productId),request);
     }
 
     @PutMapping("/{productId}/stock/decrease")
     public ProductResponse decrease(@PathVariable UUID productId,
-                                    @RequestBody DecreaseStockRequest request){
+                                   @Valid @RequestBody DecreaseStockRequest request){
         return decreaseStockService.decrease(new ProductId(productId),request);
     }
 
@@ -75,7 +76,7 @@ public class ProductController {
     //create order için stok kontrolü
     @GetMapping("/{id}/check-stock")
     public ResponseEntity<Void> checkStock(@PathVariable UUID id,
-                                           @RequestParam int quantity) {
+                                          @Valid @RequestParam int quantity) {
         checkStockService.checkStock(new ProductId(id), quantity);
         return ResponseEntity.ok().build();
     }
