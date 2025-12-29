@@ -18,7 +18,7 @@ public class OrderCancelledNotificationUseCase {
         this.mapper = mapper;
     }
 
-    public void sentCancel(OrderCancelledEventDto dto) {
+    public void sendCancel(OrderCancelledEventDto dto) {
         boolean sent = processedEventPort.tryMarkProcessed(dto.eventId(), "ORDER_CANCELLED", dto.orderId());
         if (!sent) {
             return;
