@@ -34,17 +34,9 @@ spring:
           brokers: localhost:9092
         bindings:
           orderCreatedConsumer-in-0:
-            consumer:
-              startOffset: earliest
           orderPaidConsumer-in-0:
-            consumer:
-              startOffset: earliest
           orderDeliveredConsumer-in-0:
-            consumer:
-              startOffset: earliest
           orderCancelledConsumer-in-0:
-            consumer:
-              startOffset: earliest
 
   datasource:
     url: jdbc:postgresql://localhost:5437/notification_service
