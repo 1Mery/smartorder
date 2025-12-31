@@ -74,6 +74,7 @@ public class PaidOrderCommandHandler {
         eventEntity.setPayload(payload);
         eventEntity.setStatus(OutboxStatus.PENDING);
         eventEntity.setCreatedAt(Instant.now());
+        eventEntity.setBindingName("orderPaidEvents-out-0");
 
         eventRepository.save(eventEntity);
 

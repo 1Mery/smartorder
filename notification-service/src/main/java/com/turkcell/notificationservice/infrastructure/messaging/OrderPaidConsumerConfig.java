@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 public class OrderPaidConsumerConfig {
 
     @Bean
-    public Consumer<OrderPaidEventDto> orderPaidEventDtoConsumer(OrderPaidNotificationUseCase useCase){
+    public Consumer<OrderPaidEventDto> orderPaidEventConsumer(OrderPaidNotificationUseCase useCase){
         return payload ->{
             log.info("[KAFKA IN] order-paid-events payload = " + payload);
         };

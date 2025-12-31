@@ -74,6 +74,7 @@ public class DeliveredOrderCommandHandler {
         eventEntity.setPayload(payload);
         eventEntity.setStatus(OutboxStatus.PENDING);
         eventEntity.setCreatedAt(Instant.now());
+        eventEntity.setBindingName("orderDeliveredEvents-out-0");
 
         eventRepository.save(eventEntity);
 

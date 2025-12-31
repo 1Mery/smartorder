@@ -74,6 +74,7 @@ public class CancelOrderCommandHandler {
         eventEntity.setPayload(payload);
         eventEntity.setStatus(OutboxStatus.PENDING);
         eventEntity.setCreatedAt(Instant.now());
+        eventEntity.setBindingName("orderCancelledEvents-out-0");
 
         eventRepository.save(eventEntity);
 
