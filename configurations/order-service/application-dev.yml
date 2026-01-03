@@ -30,6 +30,8 @@ spring:
           destination: order-delivered-events
         orderCancelEvents-out-0:
           destination: order-cancelled-events
+        stockDecreaseRequests-out-0:
+          destination: stock-decrease-requests
       kafka:
         binder:
           brokers: localhost:9092

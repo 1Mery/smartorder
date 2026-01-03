@@ -26,6 +26,10 @@ spring:
           destination: order-events      # Order-service'in gönderdiği topic
           group: product-service         # Consumer group adı
           contentType: application/json
+        stockDecreaseRequests-in-0:
+          destination: stock-decrease-requests
+          group: product-service
+          contentType: application/json
 
       kafka:
         binder:
