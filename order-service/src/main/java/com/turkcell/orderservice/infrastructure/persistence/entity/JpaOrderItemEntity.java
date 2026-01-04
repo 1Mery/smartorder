@@ -1,4 +1,4 @@
-package com.turkcell.orderservice.infrastructure.persistence;
+package com.turkcell.orderservice.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

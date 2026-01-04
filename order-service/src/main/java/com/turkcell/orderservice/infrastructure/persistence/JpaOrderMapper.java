@@ -1,11 +1,12 @@
 package com.turkcell.orderservice.infrastructure.persistence;
 
 import com.turkcell.orderservice.domain.model.*;
+import com.turkcell.orderservice.infrastructure.persistence.entity.JpaOrderEntity;
+import com.turkcell.orderservice.infrastructure.persistence.entity.JpaOrderItemEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class JpaOrderMapper {

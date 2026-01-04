@@ -3,6 +3,7 @@ package com.turkcell.orderservice.infrastructure.persistence;
 import com.turkcell.orderservice.domain.model.Order;
 import com.turkcell.orderservice.domain.model.OrderId;
 import com.turkcell.orderservice.domain.ports.OrderRepository;
+import com.turkcell.orderservice.infrastructure.persistence.entity.JpaOrderEntity;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
